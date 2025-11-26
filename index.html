@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Final Boss Notes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar glass">
+      <div class="branding">The Final Boss Notes</div>
+    </header>
+
+    <aside class="sidebar glass left-sidebar">
+      <h2>Filters</h2>
+      <div class="filter-group">
+        <input type="text" id="searchInput" placeholder="Search notes..." />
+      </div>
+      <div class="filter-group">
+        <select id="semesterFilter">
+          <option value="">All Semesters</option>
+          <option value="1">Semester 1</option>
+          <option value="2">Semester 2</option>
+          <option value="3">Semester 3</option>
+          <option value="4">Semester 4</option>
+          <option value="5">Semester 5</option>
+          <option value="6">Semester 6</option>
+          <option value="7">Semester 7</option>
+          <option value="8">Semester 8</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <select id="sortSelect">
+          <option value="uploadDateDesc">Newest First</option>
+          <option value="uploadDateAsc">Oldest First</option>
+          <option value="titleAsc">Title (A-Z)</option>
+          <option value="titleDesc">Title (Z-A)</option>
+        </select>
+      </div>
+    </aside>
+
+    <main class="content glass" id="notesList">
+      <p>Loading notes...</p>
+    </main>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
