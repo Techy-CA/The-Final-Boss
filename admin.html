@@ -1,512 +1,271 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin Panel - The Final Boss Notes</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <style>
-    /* Include the same CSS as your main client app with slight modifications for admin layout */
-    :root {
-      --bg-dark: #0a0b1e;
-      --bg-panel: rgba(255, 255, 255, 0.05);
-      --primary: #00f2ff;
-      --secondary: #7000ff;
-      --text-main: #ffffff;
-      --text-muted: #a0a0b0;
-      --border-light: rgba(255, 255, 255, 0.1);
-      --radius-md: 16px;
-      --transition-fast: 0.2s ease;
-      --transition-smooth: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    }
+// Firebase init
+const firebaseConfig = {
+  apiKey: "AIzaSyBFWCCiw-9_8gsBaXoJ1RxMEL89lvyOIho",
+  authDomain: "the-final-boss-notes.firebaseapp.com",
+  projectId: "the-final-boss-notes",
+  storageBucket: "the-final-boss-notes.appspot.com",
+  messagingSenderId: "319601095052",
+  appId: "1:319601095052:web:691823298ab7c1826f66a9",
+  measurementId: "G-CVCSSCXMCB",
+};
+firebase.initializeApp(firebaseConfig);
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+const auth = firebase.auth();
+const db   = firebase.firestore();
 
-    body {
-      font-family: 'Outfit', sans-serif;
-      background: var(--bg-dark);
-      color: var(--text-main);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-    }
+// Elements
+const logoutBtn      = document.getElementById('logoutBtn');
+const loginSection   = document.getElementById('loginSection');
+const adminSection   = document.getElementById('adminSection');
+const loginForm      = document.getElementById('loginForm');
+const loginMessage   = document.getElementById('loginMessage');
 
-    .glass {
-      background: var(--bg-panel);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-md);
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-      padding: 25px;
-      margin-bottom: 20px;
-    }
+const noteForm       = document.getElementById('noteForm');
+const formMessage    = document.getElementById('formMessage');
+const cancelEditBtn  = document.getElementById('cancelEditBtn');
+const notesListEl    = document.getElementById('notesList');
+const notesCountEl   = document.getElementById('notesCount');
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
+// form fields
+const fTitle     = document.getElementById('noteTitle');
+const fSubject   = document.getElementById('noteSubject');
+const fSemester  = document.getElementById('noteSemester');
+const fFaculty   = document.getElementById('noteFaculty');
+const fTags      = document.getElementById('noteTags');
+const fFileSize  = document.getElementById('noteFileSize');
+const fDriveLink = document.getElementById('noteDriveLink');
 
-    .branding {
-      font-size: 1.75rem;
-      font-weight: 700;
-      background: linear-gradient(90deg, var(--secondary), var(--primary));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
+let isEditing = false;
+let editingId = null;
 
-    button {
-      background: linear-gradient(90deg, var(--secondary), var(--primary));
-      border: none;
-      color: white;
-      padding: 10px 22px;
-      font-weight: 600;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
+// ---------- UI helpers ----------
+function showLogin() {
+  loginSection.classList.remove('hidden');
+  adminSection.classList.add('hidden');
+  logoutBtn.classList.add('hidden');
+}
 
-    button:hover {
-      opacity: 0.85;
-    }
+function showDashboard() {
+  loginSection.classList.add('hidden');
+  adminSection.classList.remove('hidden');
+  logoutBtn.classList.remove('hidden');
+}
 
-    input, select {
-      width: 100%;
-      padding: 12px 16px;
-      border-radius: 12px;
-      border: 1px solid var(--border-light);
-      background: rgba(0, 0, 0, 0.2);
-      color: var(--text-main);
-      font-size: 1rem;
-      outline: none;
-      margin-bottom: 16px;
-      transition: border-color var(--transition-fast);
-    }
+function clearMessages() {
+  loginMessage.textContent = '';
+  formMessage.textContent = '';
+  formMessage.className = 'message';
+}
 
-    input:focus, select:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 8px var(--primary);
-      background: rgba(0, 0, 0, 0.35);
-    }
+function resetForm() {
+  noteForm.reset();
+  isEditing = false;
+  editingId = null;
+  cancelEditBtn.classList.add('hidden');
+  formMessage.textContent = '';
+  formMessage.className = 'message';
+}
 
-    label {
-      font-weight: 600;
-      margin-bottom: 6px;
-      display: block;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
+// ---------- Auth state ----------
+auth.onAuthStateChanged(user => {
+  clearMessages();
+  if (user) {
+    showDashboard();
+    loadNotes();
+  } else {
+    showLogin();
+    notesListEl.innerHTML = '';
+    notesCountEl.textContent = '0 notes';
+  }
+});
 
-    .message {
-      margin: 10px 0 15px 0;
-      min-height: 20px;
-      font-weight: 600;
-      text-align: center;
-    }
-    .message.success {
-      color: #00ff9d;
-    }
-    .message.error {
-      color: #ff4d4d;
-    }
+// ---------- Login ----------
+loginForm.addEventListener('submit', e => {
+  e.preventDefault();
+  clearMessages();
+  const email = loginForm.loginEmail.value.trim();
+  const pass  = loginForm.loginPassword.value;
 
-    #logoutBtn {
-      background: rgba(255, 77, 77, 0.15);
-      color: var(--text-main);
-      border-radius: 12px;
-      font-weight: 600;
-      border: 1px solid rgba(255, 77, 77, 0.3);
-    }
+  if (!email || !pass) {
+    loginMessage.textContent = 'Enter email and password.';
+    loginMessage.className = 'message error';
+    return;
+  }
 
-    #logoutBtn:hover {
-      background: rgba(255, 77, 77, 0.3);
-      box-shadow: 0 0 15px rgba(255, 77, 77, 0.4);
-    }
-
-    .note-list {
-      max-height: 400px;
-      overflow-y: auto;
-      margin-top: 15px;
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-md);
-    }
-
-    .note-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 15px;
-      border-bottom: 1px solid var(--border-light);
-      background: rgba(255, 255, 255, 0.03);
-      transition: background 0.2s;
-    }
-
-    .note-item:last-child {
-      border-bottom: none;
-    }
-
-    .note-item:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .note-summary {
-      flex: 1;
-      font-size: 0.9rem;
-      color: var(--text-main);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-right: 12px;
-    }
-
-    .btn-group button {
-      background: transparent;
-      border: none;
-      color: var(--primary);
-      font-weight: 700;
-      cursor: pointer;
-      margin-left: 10px;
-      transition: color 0.3s;
-    }
-
-    .btn-group button:hover {
-      color: var(--secondary);
-    }
-
-    form {
-      max-width: 480px;
-      margin: 0 auto;
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: var(--primary);
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <div class="branding">Admin Panel</div>
-    <button id="logoutBtn" class="hidden">Logout</button>
-  </header>
-
-  <main class="glass">
-    <!-- Login Section -->
-    <section id="loginSection">
-      <h2>Admin Login</h2>
-      <form id="loginForm">
-        <label for="loginEmail">Email</label>
-        <input type="email" id="loginEmail" placeholder="Email" required />
-        <label for="loginPassword">Password</label>
-        <input type="password" id="loginPassword" placeholder="Password" required minlength="6" />
-        <button type="submit">Login</button>
-      </form>
-      <div id="loginMessage" class="message"></div>
-    </section>
-
-    <!-- Admin Dashboard Section -->
-    <section id="adminSection" class="hidden">
-      <h2>Manage Notes</h2>
-      <form id="noteForm" novalidate>
-        <label for="noteTitle">Title *</label>
-        <input type="text" id="noteTitle" required />
-
-        <label for="noteSubject">Subject *</label>
-        <input type="text" id="noteSubject" required />
-
-        <label for="noteSemester">Semester *</label>
-        <select id="noteSemester" required>
-          <option value="" disabled selected>Select semester</option>
-          <option value="1">Semester 1</option>
-          <option value="2">Semester 2</option>
-          <option value="3">Semester 3</option>
-          <option value="4">Semester 4</option>
-          <option value="5">Semester 5</option>
-          <option value="6">Semester 6</option>
-          <option value="7">Semester 7</option>
-          <option value="8">Semester 8</option>
-        </select>
-
-        <label for="noteFaculty">Faculty *</label>
-        <input type="text" id="noteFaculty" required />
-
-        <label for="noteTags">Tags (comma separated)</label>
-        <input type="text" id="noteTags" />
-
-        <label for="noteFileSize">File size (MB) *</label>
-        <input type="text" id="noteFileSize" required />
-
-        <label for="noteDriveLink">Google Drive Link *</label>
-        <input type="url" id="noteDriveLink" required />
-
-        <button type="submit">Save Note</button>
-        <button type="button" id="cancelEditBtn" class="hidden" style="margin-left: 12px; background: #ff4d4d;">Cancel Edit</button>
-      </form>
-
-      <div id="formMessage" class="message"></div>
-
-      <div class="note-list glass" id="notesList"></div>
-    </section>
-  </main>
-
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script>
-    // Firebase init
-    const firebaseConfig = {
-      apiKey: "AIzaSyBFWCCiw-9_8gsBaXoJ1RxMEL89lvyOIho",
-      authDomain: "the-final-boss-notes.firebaseapp.com",
-      projectId: "the-final-boss-notes",
-      storageBucket: "the-final-boss-notes.appspot.com",
-      messagingSenderId: "319601095052",
-      appId: "1:319601095052:web:691823298ab7c1826f66a9",
-      measurementId: "G-CVCSSCXMCB",
-    };
-    firebase.initializeApp(firebaseConfig);
-
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    // UI elements
-    const logoutBtn = document.getElementById('logoutBtn');
-    const loginSection = document.getElementById('loginSection');
-    const adminSection = document.getElementById('adminSection');
-    const loginForm = document.getElementById('loginForm');
-    const loginMessage = document.getElementById('loginMessage');
-    const noteForm = document.getElementById('noteForm');
-    const formMessage = document.getElementById('formMessage');
-    const notesList = document.getElementById('notesList');
-    const cancelEditBtn = document.getElementById('cancelEditBtn');
-
-    let isEditing = false;
-    let editNoteId = null;
-
-    // Toggle UI visibility on auth state change
-    function updateUI(user) {
-      if (user) {
-        loginSection.classList.add('hidden');
-        adminSection.classList.remove('hidden');
-        logoutBtn.classList.remove('hidden');
-        loadNotes();
-      } else {
-        loginSection.classList.remove('hidden');
-        adminSection.classList.add('hidden');
-        logoutBtn.classList.add('hidden');
-        clearNoteForm();
-        clearNotesList();
-      }
-      clearMessages();
-    }
-
-    auth.onAuthStateChanged(user => updateUI(user));
-
-    // Login form handler
-    loginForm.addEventListener('submit', e => {
-      e.preventDefault();
+  auth.signInWithEmailAndPassword(email, pass)
+    .then(() => {
+      loginForm.reset();
       loginMessage.textContent = '';
-      const email = loginForm.loginEmail.value.trim();
-      const password = loginForm.loginPassword.value;
+    })
+    .catch(err => {
+      loginMessage.textContent = err.message;
+      loginMessage.className = 'message error';
+    });
+});
 
-      auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
-          loginForm.reset();
-        })
-        .catch(err => {
-          loginMessage.textContent = 'Login failed: ' + err.message;
-        });
+// ---------- Logout ----------
+logoutBtn.addEventListener('click', () => {
+  auth.signOut();
+});
+
+// ---------- Load notes ----------
+async function loadNotes() {
+  notesListEl.innerHTML = '<div class="message">Loading notes...</div>';
+  try {
+    const snap = await db.collection('notes')
+      .orderBy('uploadDate', 'desc')
+      .get();
+
+    const docs = snap.docs;
+    notesCountEl.textContent = `${docs.length} notes`;
+
+    if (!docs.length) {
+      notesListEl.innerHTML = '<div class="message">No notes yet.</div>';
+      return;
+    }
+
+    notesListEl.innerHTML = '';
+    docs.forEach(doc => {
+      const data = doc.data();
+      const row  = document.createElement('div');
+      row.className = 'note-row';
+      row.innerHTML = `
+        <div class="note-main">
+          <div class="note-title-small" title="${data.title || ''}">
+            ${data.title || '(no title)'}
+          </div>
+          <div class="note-meta">
+            Sem ${data.semester || '-'} • ${data.subject || '-'} • ${data.faculty || '-'}
+          </div>
+        </div>
+        <div class="note-actions">
+          <button data-id="${doc.id}" class="editBtn">Edit</button>
+          <button data-id="${doc.id}" class="danger deleteBtn">Delete</button>
+        </div>
+      `;
+      notesListEl.appendChild(row);
     });
 
-    // Logout button handler
-    logoutBtn.addEventListener('click', () => {
-      auth.signOut();
-    });
+    // attach events
+    notesListEl.querySelectorAll('.editBtn').forEach(btn =>
+      btn.addEventListener('click', onEditClick)
+    );
+    notesListEl.querySelectorAll('.deleteBtn').forEach(btn =>
+      btn.addEventListener('click', onDeleteClick)
+    );
 
-    // Load and display notes list with edit/delete buttons
-    async function loadNotes() {
-      notesList.innerHTML = '<p style="text-align:center; opacity:0.6;">Loading notes...</p>';
-      try {
-        const snapshot = await db.collection('notes').orderBy('uploadDate', 'desc').get();
-        if (snapshot.empty) {
-          notesList.innerHTML = '<p style="text-align:center; opacity:0.6;">No notes found.</p>';
-          return;
-        }
-        notesList.innerHTML = '';
-        snapshot.forEach(doc => {
-          const note = doc.data();
-          const noteEl = document.createElement('div');
-          noteEl.className = 'note-item';
-          noteEl.innerHTML = `
-            <div class="note-summary" title="${note.title} (Sem ${note.semester})">${note.title} (Sem ${note.semester})</div>
-            <div class="btn-group">
-              <button data-id="${doc.id}" class="editBtn">Edit</button>
-              <button data-id="${doc.id}" class="deleteBtn" style="color:#ff4d4d;">Delete</button>
-            </div>
-          `;
-          notesList.appendChild(noteEl);
-        });
+  } catch (err) {
+    notesListEl.innerHTML = `<div class="message error">Error loading notes: ${err.message}</div>`;
+  }
+}
 
-        // Attach edit/delete event listeners
-        document.querySelectorAll('.editBtn').forEach(btn => btn.addEventListener('click', startEdit));
-        document.querySelectorAll('.deleteBtn').forEach(btn => btn.addEventListener('click', deleteNote));
-      } catch (err) {
-        notesList.innerHTML = `<p style="text-align:center; color: var(--error);">Error loading notes: ${err.message}</p>`;
-      }
+// ---------- Edit ----------
+async function onEditClick(e) {
+  const id = e.target.dataset.id;
+  clearMessages();
+
+  try {
+    const doc = await db.collection('notes').doc(id).get();
+    if (!doc.exists) {
+      formMessage.textContent = 'Note not found.';
+      formMessage.className = 'message error';
+      return;
     }
+    const d = doc.data();
+    fTitle.value     = d.title || '';
+    fSubject.value   = d.subject || '';
+    fSemester.value  = d.semester || '';
+    fFaculty.value   = d.faculty || '';
+    fTags.value      = (d.tags || []).join(', ');
+    fFileSize.value  = d.fileSize || '';
+    fDriveLink.value = d.driveLink || '';
 
-    // Clear notes list UI
-    function clearNotesList() {
-      notesList.innerHTML = '';
+    isEditing = true;
+    editingId = id;
+    cancelEditBtn.classList.remove('hidden');
+    formMessage.textContent = 'Editing existing note.';
+    formMessage.className = 'message';
+  } catch (err) {
+    formMessage.textContent = 'Error opening note: ' + err.message;
+    formMessage.className = 'message error';
+  }
+}
+
+// ---------- Delete ----------
+async function onDeleteClick(e) {
+  const id = e.target.dataset.id;
+  clearMessages();
+  const ok = confirm('Delete this note permanently?');
+  if (!ok) return;
+
+  try {
+    await db.collection('notes').doc(id).delete();
+    formMessage.textContent = 'Note deleted.';
+    formMessage.className = 'message success';
+    if (isEditing && editingId === id) resetForm();
+    loadNotes();
+  } catch (err) {
+    formMessage.textContent = 'Error deleting note: ' + err.message;
+    formMessage.className = 'message error';
+  }
+}
+
+// ---------- Cancel edit ----------
+cancelEditBtn.addEventListener('click', e => {
+  e.preventDefault();
+  resetForm();
+});
+
+// ---------- Save (add / update) ----------
+noteForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  clearMessages();
+
+  const title    = fTitle.value.trim();
+  const subject  = fSubject.value.trim();
+  const semester = fSemester.value;
+  const faculty  = fFaculty.value.trim();
+  const tags     = fTags.value.split(',')
+                      .map(t => t.trim())
+                      .filter(Boolean);
+  const fileSize = fFileSize.value.trim();
+  const drive    = fDriveLink.value.trim();
+
+  if (!title || !subject || !semester || !faculty || !fileSize || !drive) {
+    formMessage.textContent = 'Please fill all required fields.';
+    formMessage.className = 'message error';
+    return;
+  }
+  if (!drive.startsWith('http')) {
+    formMessage.textContent = 'Enter a valid Google Drive link.';
+    formMessage.className = 'message error';
+    return;
+  }
+
+  const payload = {
+    title,
+    subject,
+    semester,
+    faculty,
+    tags,
+    fileSize,
+    driveLink: drive,
+    uploadDate: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  try {
+    if (isEditing && editingId) {
+      await db.collection('notes').doc(editingId).update(payload);
+      formMessage.textContent = 'Note updated.';
+    } else {
+      await db.collection('notes').add(payload);
+      formMessage.textContent = 'Note added.';
     }
-
-    // Clear form and messages
-    function clearNoteForm() {
-      noteForm.reset();
-      isEditing = false;
-      editNoteId = null;
-      cancelEditBtn.classList.add('hidden');
-      formMessage.textContent = '';
-      formMessage.className = 'message';
-    }
-
-    function clearMessages() {
-      loginMessage.textContent = '';
-      formMessage.textContent = '';
-      formMessage.className = 'message';
-    }
-
-    // Start editing note
-    async function startEdit(e) {
-      const id = e.target.dataset.id;
-      try {
-        const doc = await db.collection('notes').doc(id).get();
-        if (!doc.exists) {
-          alert('Note not found');
-          return;
-        }
-        const data = doc.data();
-        noteForm.noteTitle.value = data.title || '';
-        noteForm.noteSubject.value = data.subject || '';
-        noteForm.noteSemester.value = data.semester || '';
-        noteForm.noteFaculty.value = data.faculty || '';
-        noteForm.noteTags.value = data.tags ? data.tags.join(', ') : '';
-        noteForm.noteFileSize.value = data.fileSize || '';
-        noteForm.noteDriveLink.value = data.driveLink || '';
-
-        isEditing = true;
-        editNoteId = id;
-        cancelEditBtn.classList.remove('hidden');
-        formMessage.textContent = 'Editing note...';
-        formMessage.className = 'message';
-      } catch (err) {
-        formMessage.textContent = 'Error loading note: ' + err.message;
-        formMessage.className = 'message error';
-      }
-    }
-
-    // Cancel editing
-    cancelEditBtn.addEventListener('click', e => {
-      e.preventDefault();
-      clearNoteForm();
-    });
-
-    // Add or update note
-    noteForm.addEventListener('submit', async e => {
-      e.preventDefault();
-      formMessage.textContent = '';
-      formMessage.className = 'message';
-
-      // Validate required fields
-      const title = noteForm.noteTitle.value.trim();
-      const subject = noteForm.noteSubject.value.trim();
-      const semester = noteForm.noteSemester.value;
-      const faculty = noteForm.noteFaculty.value.trim();
-      const tags = noteForm.noteTags.value.split(',').map(t => t.trim()).filter(t => t.length);
-      const fileSize = noteForm.noteFileSize.value.trim();
-      const driveLink = noteForm.noteDriveLink.value.trim();
-
-      if (!title || !subject || !semester || !faculty || !fileSize || !driveLink) {
-        formMessage.textContent = 'Please fill in all required fields.';
-        formMessage.className = 'message error';
-        return;
-      }
-
-      if (!driveLink.startsWith('http')) {
-        formMessage.textContent = 'Please enter a valid Google Drive link.';
-        formMessage.className = 'message error';
-        return;
-      }
-
-      try {
-        if (isEditing && editNoteId) {
-          // Update existing note
-          await db.collection('notes').doc(editNoteId).update({
-            title,
-            subject,
-            semester,
-            faculty,
-            tags,
-            fileSize,
-            driveLink,
-            uploadDate: firebase.firestore.FieldValue.serverTimestamp()
-          });
-          formMessage.textContent = 'Note updated successfully.';
-        } else {
-          // Add new note
-          await db.collection('notes').add({
-            title,
-            subject,
-            semester,
-            faculty,
-            tags,
-            fileSize,
-            driveLink,
-            uploadDate: firebase.firestore.FieldValue.serverTimestamp()
-          });
-          formMessage.textContent = 'Note added successfully.';
-        }
-        formMessage.className = 'message success';
-        clearNoteForm();
-        loadNotes();
-      } catch (err) {
-        formMessage.textContent = 'Error saving note: ' + err.message;
-        formMessage.className = 'message error';
-      }
-    });
-
-    // Delete note
-    async function deleteNote(e) {
-      const id = e.target.dataset.id;
-      if (!confirm('Are you sure you want to delete this note?')) return;
-
-      try {
-        await db.collection('notes').doc(id).delete();
-        formMessage.textContent = 'Note deleted successfully.';
-        formMessage.className = 'message success';
-        if (isEditing && id === editNoteId) {
-          clearNoteForm();
-        }
-        loadNotes();
-      } catch (err) {
-        formMessage.textContent = 'Error deleting note: ' + err.message;
-        formMessage.className = 'message error';
-      }
-    }
-  </script>
-</body>
-</html>
+    formMessage.className = 'message success';
+    resetForm();
+    loadNotes();
+  } catch (err) {
+    formMessage.textContent = 'Error saving note: ' + err.message;
+    formMessage.className = 'message error';
+  }
+});
