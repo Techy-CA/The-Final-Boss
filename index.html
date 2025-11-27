@@ -13,6 +13,9 @@
   <div id="app">
     <header class="topbar glass">
       <div class="branding">The Final Boss Notes</div>
+      <div class="share-notes-pill">
+        Have great notes? <span>Mail us at <a href="mailto:work.notex@gmail.com">work.notex@gmail.com</a></span>
+      </div>
     </header>
 
     <aside class="sidebar glass left-sidebar">
@@ -46,6 +49,36 @@
     <main class="content glass" id="notesList">
       <p>Loading notes...</p>
     </main>
+
+    <aside class="sidebar glass right-sidebar">
+      <h2>Quick Stats</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Notes</div>
+          <div class="stat-value" id="statTotalNotes">–</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Subjects</div>
+          <div class="stat-value" id="statSubjects">–</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Semesters</div>
+          <div class="stat-value" id="statSemesters">–</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Last Updated</div>
+          <div class="stat-value small" id="statLastUpdated">–</div>
+        </div>
+      </div>
+
+      <div class="share-card">
+        <div class="share-title">Want to share your notes?</div>
+        <p class="share-text">
+          Help other students beat their exams. Send your PDFs or links to
+          <a href="mailto:work.notex@gmail.com">work.notex@gmail.com</a>.
+        </p>
+      </div>
+    </aside>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
