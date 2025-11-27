@@ -12,6 +12,12 @@ firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
 
+const footerYearEl = document.getElementById('footerYear');
+if (footerYearEl) {
+  footerYearEl.textContent = new Date().getFullYear().toString();
+}
+
+
 // UI Elements
 const notesList = document.getElementById('notesList');
 const searchInput = document.getElementById('searchInput');
