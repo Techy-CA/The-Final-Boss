@@ -1,120 +1,174 @@
+// Firebase initialization
 const firebaseConfig = {
   apiKey: "AIzaSyBFWCCiw-9_8gsBaXoJ1RxMEL89lvyOIho",
   authDomain: "the-final-boss-notes.firebaseapp.com",
   projectId: "the-final-boss-notes",
   storageBucket: "the-final-boss-notes.appspot.com",
   messagingSenderId: "319601095052",
-  appId: "1:319601095052:web:691823298ab7c1826f66a9"
+  appId: "1:319601095052:web:691823298ab7c1826f66a9",
+  measurementId: "G-CVCSSCXMCB",
 };
-
 firebase.initializeApp(firebaseConfig);
 
-const auth = firebase.auth();
 const db = firebase.firestore();
 
-const loginSection = document.getElementById("loginSection");
-const adminSection = document.getElementById("adminSection");
-const loginForm = document.getElementById("loginForm");
-const loginMessage = document.getElementById("loginMessage");
-const logoutBtn = document.getElementById("logoutBtn");
-const noteForm = document.getElementById("noteForm");
-const notesList = document.getElementById("notesList");
+// UI Elements
+const notesList = document.getElementById('notesList');
+const searchInput = document.getElementById('searchInput');
+const semesterFilter = document.getElementById('semesterFilter');
+const sortSelect = document.getElementById('sortSelect');
 
-let editingId = null;
+// stats elements
+const statTotalNotes = document.getElementById('statTotalNotes');
+const statSubjects = document.getElementById('statSubjects');
+const statSemesters = document.getElementById('statSemesters');
+const statLastUpdated = document.getElementById('statLastUpdated');
 
-// Auth State
-auth.onAuthStateChanged(user => {
-  if (user) {
-    loginSection.classList.add("hidden");
-    adminSection.classList.remove("hidden");
-    logoutBtn.classList.remove("hidden");
-    loadNotes();
-  } else {
-    loginSection.classList.remove("hidden");
-    adminSection.classList.add("hidden");
-    logoutBtn.classList.add("hidden");
+let notesCache = [];
+
+// Helper: clear children of element
+function clearChildren(el) {
+  while (el.firstChild) el.removeChild(el.firstChild);
+}
+
+// Helper: sanitize text for search/filter
+function sanitize(text) {
+  return text.toLowerCase().trim();
+}
+
+// Render note cards
+function renderNotes(notes) {
+  clearChildren(notesList);
+  if (notes.length === 0) {
+    notesList.innerHTML = '<div class="empty-state">No notes found matching your criteria.</div>';
+    return;
   }
-});
-
-// Login
-loginForm.addEventListener("submit", e => {
-  e.preventDefault();
-  const email = loginEmail.value;
-  const pass = loginPassword.value;
-
-  auth.signInWithEmailAndPassword(email, pass)
-    .catch(err => loginMessage.innerText = err.message);
-});
-
-// Logout
-logoutBtn.onclick = () => auth.signOut();
-
-// Load Notes
-async function loadNotes() {
-  notesList.innerHTML = "";
-  const snapshot = await db.collection("notes").orderBy("uploadDate","desc").get();
-
-  snapshot.forEach(doc => {
-    let note = doc.data();
-
-    let div = document.createElement("div");
-    div.className = "note-item";
-    div.innerHTML = `
-      <div>${note.title} (Sem ${note.semester})</div>
-      <div>
-        <button onclick="editNote('${doc.id}')">Edit</button>
-        <button onclick="deleteNote('${doc.id}')">Delete</button>
+  notes.forEach(note => {
+    const card = document.createElement('div');
+    card.className = 'note-card';
+    card.innerHTML = `
+      <div class="note-header">
+        <div class="note-title" title="${note.title}">${note.title}</div>
+        <div class="note-badge">Sem ${note.semester}</div>
+      </div>
+      <div class="note-body">
+        <div class="note-info"><span class="icon">📚</span> ${note.subject}</div>
+        <div class="note-info"><span class="icon">👨‍🏫</span> ${note.faculty}</div>
+        <div class="note-tags">${note.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}</div>
+      </div>
+      <div class="note-footer">
+        <div class="file-size">${note.fileSize} MB</div>
+        <a class="download-btn" href="${note.driveLink}" target="_blank" rel="noopener noreferrer">
+          Download
+        </a>
       </div>
     `;
-    notesList.appendChild(div);
+    notesList.appendChild(card);
   });
 }
 
-// Add / Update Note
-noteForm.addEventListener("submit", async e => {
-  e.preventDefault();
+// Update quick stats
+function updateStats(notes) {
+  // total notes
+  statTotalNotes.textContent = notes.length.toString();
 
-  let data = {
-    title: noteTitle.value,
-    subject: noteSubject.value,
-    semester: noteSemester.value,
-    faculty: noteFaculty.value,
-    tags: noteTags.value.split(','),
-    fileSize: noteFileSize.value,
-    driveLink: noteDriveLink.value,
-    uploadDate: firebase.firestore.FieldValue.serverTimestamp()
-  };
+  // unique subjects
+  const subjectSet = new Set();
+  const semesterSet = new Set();
+  let latest = null;
 
-  if (editingId) {
-    await db.collection("notes").doc(editingId).update(data);
-    editingId = null;
+  notes.forEach(n => {
+    if (n.subject) subjectSet.add(n.subject);
+    if (n.semester) semesterSet.add(n.semester);
+    if (n.uploadDate && n.uploadDate.toDate) {
+      const d = n.uploadDate.toDate();
+      if (!latest || d > latest) latest = d;
+    }
+  });
+
+  statSubjects.textContent = subjectSet.size ? subjectSet.size.toString() : '–';
+  statSemesters.textContent = semesterSet.size ? semesterSet.size.toString() : '–';
+
+  if (latest) {
+    const options = { day: '2-digit', month: 'short', year: 'numeric' };
+    statLastUpdated.textContent = latest.toLocaleDateString(undefined, options);
   } else {
-    await db.collection("notes").add(data);
+    statLastUpdated.textContent = '–';
+  }
+}
+
+// Filter, search, sort notes dynamically
+function updateDisplayedNotes() {
+  let filtered = notesCache.slice();
+
+  // Filter by semester
+  const semFilterVal = semesterFilter.value;
+  if (semFilterVal) {
+    filtered = filtered.filter(n => n.semester === semFilterVal);
   }
 
-  noteForm.reset();
-  loadNotes();
-});
+  // Search filter on title, subject, faculty, tags
+  const searchVal = sanitize(searchInput.value);
+  if (searchVal) {
+    filtered = filtered.filter(note => {
+      return (
+        sanitize(note.title).includes(searchVal) ||
+        sanitize(note.subject).includes(searchVal) ||
+        sanitize(note.faculty).includes(searchVal) ||
+        note.tags.some(tag => sanitize(tag).includes(searchVal))
+      );
+    });
+  }
 
-// Edit
-async function editNote(id) {
-  let doc = await db.collection("notes").doc(id).get();
-  let data = doc.data();
+  // Sorting
+  const sortVal = sortSelect.value;
+  filtered.sort((a,b) => {
+    if (sortVal === 'uploadDateDesc') {
+      return b.uploadDate.seconds - a.uploadDate.seconds;
+    } else if (sortVal === 'uploadDateAsc') {
+      return a.uploadDate.seconds - b.uploadDate.seconds;
+    } else if (sortVal === 'titleAsc') {
+      return a.title.localeCompare(b.title);
+    } else if (sortVal === 'titleDesc') {
+      return b.title.localeCompare(a.title);
+    }
+    return 0;
+  });
 
-  noteTitle.value = data.title;
-  noteSubject.value = data.subject;
-  noteSemester.value = data.semester;
-  noteFaculty.value = data.faculty;
-  noteTags.value = data.tags.join(",");
-  noteFileSize.value = data.fileSize;
-  noteDriveLink.value = data.driveLink;
-
-  editingId = id;
+  renderNotes(filtered);
+  updateStats(notesCache); // stats always from full dataset
 }
 
-// Delete
-async function deleteNote(id) {
-  if (!confirm("Delete this note?")) return;
-  await db.collection("notes").doc(id).delete();
-  loadNotes();
+// Load notes from Firestore
+async function loadNotes() {
+  notesList.innerHTML = '<div class="loading-spinner"></div>';
+  try {
+    const querySnapshot = await db.collection('notes').get();
+    notesCache = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        title: data.title || '',
+        subject: data.subject || '',
+        semester: data.semester || '',
+        faculty: data.faculty || '',
+        tags: data.tags || [],
+        fileSize: data.fileSize || '',
+        driveLink: data.driveLink || '',
+        uploadDate: data.uploadDate || { seconds: 0 }
+      };
+    });
+    updateDisplayedNotes();
+  } catch (error) {
+    console.error(error);
+    notesList.innerHTML = '<div class="error-state">Failed to load notes. Please try again later.</div>';
+  }
 }
+
+// Event listeners for filters and search
+searchInput.addEventListener('input', updateDisplayedNotes);
+semesterFilter.addEventListener('change', updateDisplayedNotes);
+sortSelect.addEventListener('change', updateDisplayedNotes);
+
+// Initial notes load
+loadNotes();
