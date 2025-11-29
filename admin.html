@@ -3,24 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>The Final Boss Notes – Admin</title>
+  <title>Admin – The Final Boss Notes</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-
   <style>
     :root {
-      --bg-dark: #0a0b1e;
-      --bg-panel: rgba(255, 255, 255, 0.05);
+      --bg-dark: #050616;
+      --bg-panel: rgba(255, 255, 255, 0.06);
+      --border-light: rgba(255, 255, 255, 0.14);
       --primary: #00f2ff;
-      --primary-glow: rgba(0, 242, 255, 0.4);
       --secondary: #7000ff;
-      --text-main: #ffffff;
-      --text-muted: #a0a0b0;
-      --border-light: rgba(255, 255, 255, 0.1);
+      --error: #ff4d4d;
+      --success: #00ff9d;
 
-      --radius-sm: 8px;
       --radius-md: 16px;
+      --radius-lg: 22px;
 
       --transition-fast: 0.2s ease;
     }
@@ -33,319 +31,652 @@
 
     body {
       font-family: 'Outfit', sans-serif;
-      background: var(--bg-dark);
-      color: var(--text-main);
+      background: radial-gradient(circle at 0 0, rgba(112,0,255,0.35), transparent 55%),
+                  radial-gradient(circle at 100% 100%, rgba(0,242,255,0.25), transparent 55%),
+                  #050616;
+      color: #fff;
       min-height: 100vh;
-      overflow-x: hidden;
-      background-image:
-        radial-gradient(circle at 10% 20%, rgba(112, 0, 255, 0.15) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(0, 242, 255, 0.1) 0%, transparent 40%);
-      display: flex;
-      flex-direction: column;
-    }
-
-    #app {
-      display: grid;
-      grid-template-areas:
-        "header header header"
-        "left content right";
-      grid-template-columns: 320px 1fr 320px;
-      grid-template-rows: 70px auto;
-      gap: 20px;
       padding: 20px;
-      max-width: 1600px;
-      margin: 0 auto;
-      flex: 1 0 auto;
     }
 
-    .site-footer {
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      width: 100%;
-    }
-
+    /* Glass */
     .glass {
       background: var(--bg-panel);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-radius: var(--radius-md);
       border: 1px solid var(--border-light);
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
     }
 
-    .glass-inner {
-      background: rgba(0, 0, 0, 0.25);
-      border-radius: var(--radius-md);
-      padding: 14px 16px;
-    }
-
+    /* Topbar */
     .topbar {
-      grid-area: header;
-      border-radius: var(--radius-md);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 24px;
+      padding: 14px 24px;
+      margin-bottom: 22px;
     }
 
     .branding {
       font-size: 1.4rem;
       font-weight: 700;
-      background: linear-gradient(90deg, #ff6bcb, #00f2ff);
+      background: linear-gradient(90deg, var(--secondary), var(--primary));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       letter-spacing: 1px;
-    }
-
-    .share-notes-pill {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      background: rgba(0, 0, 0, 0.35);
-      padding: 8px 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.08);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .share-notes-pill span {
-      color: var(--text-main);
-    }
-
-    .sidebar {
-      border-radius: var(--radius-md);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .left-sidebar {
-      grid-area: left;
-    }
-
-    .right-sidebar {
-      grid-area: right;
-    }
-
-    .content {
-      grid-area: content;
-      border-radius: var(--radius-md);
-      padding: 24px;
-    }
-
-    h2 {
-      font-size: 1rem;
       text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-      border-bottom: 1px solid var(--border-light);
-      padding-bottom: 6px;
     }
 
-    h3 {
-      font-size: 0.95rem;
-      margin-bottom: 6px;
-    }
-
-    .bulk-import {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .bulk-help {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-    }
-
-    .bulk-help code {
-      font-family: monospace;
-      background: rgba(0,0,0,0.35);
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
-
-    #bulkJsonInput,
-    #sheetUrlInput {
-      width: 100%;
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border-light);
-      color: var(--text-main);
-      padding: 10px 12px;
-      font-size: 0.85rem;
-      font-family: monospace;
-    }
-
-    #bulkJsonInput {
-      min-height: 170px;
-      resize: vertical;
-    }
-
-    #sheetUrlInput {
-      font-family: 'Outfit', sans-serif;
-    }
-
-    #bulkImportBtn,
-    #sheetImportBtn {
-      background: var(--primary);
-      color: #000;
-      border: none;
-      padding: 8px 18px;
+    #logoutBtn {
       border-radius: 999px;
-      font-size: 0.85rem;
-      font-weight: 600;
+      padding: 8px 18px;
+      border: 1px solid rgba(255,77,77,0.4);
+      background: rgba(255,77,77,0.12);
+      color: #ffb3b3;
+      font-weight: 500;
       cursor: pointer;
-      align-self: flex-start;
       transition: var(--transition-fast);
     }
 
-    #bulkImportBtn:hover,
-    #sheetImportBtn:hover {
-      box-shadow: 0 0 15px var(--primary-glow);
+    #logoutBtn:hover {
+      background: rgba(255,77,77,0.24);
+      box-shadow: 0 0 16px rgba(255,77,77,0.35);
     }
 
-    .bulk-status {
+    /* Layout */
+    .layout {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.1fr 1.4fr;
+      gap: 20px;
+    }
+
+    /* Auth card */
+    .auth-card {
+      grid-column: 1 / -1;
+      max-width: 420px;
+      margin: 40px auto 0;
+      padding: 26px 28px;
+    }
+
+    .auth-card h2,
+    .form-card h2,
+    .list-card h2 {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 1.4px;
+      margin-bottom: 16px;
+      color: rgba(255,255,255,0.75);
+    }
+
+    label {
+      display: block;
       font-size: 0.78rem;
-      color: var(--text-muted);
-    }
-
-    .format-card {
-      padding: 14px 16px;
-      border-radius: var(--radius-md);
-      background: rgba(0,0,0,0.3);
-    }
-
-    .format-title {
-      font-size: 0.85rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
       margin-bottom: 6px;
+      color: rgba(255,255,255,0.65);
     }
 
-    .format-list {
-      list-style: none;
+    input, select {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.35);
+      color: #fff;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      margin-bottom: 14px;
+      outline: none;
+      transition: var(--transition-fast);
+    }
+
+    input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(0,242,255,0.18);
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* Primary button */
+    button[type="submit"],
+    #saveBtn {
+      width: 100%;
+      border-radius: 999px;
+      padding: 11px 0;
+      background: linear-gradient(90deg, var(--secondary), var(--primary));
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.9rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 4px;
+      transition: var(--transition-fast);
+    }
+
+    button[type="submit"]:hover,
+    #saveBtn:hover {
+      filter: brightness(1.06);
+      box-shadow: 0 0 20px rgba(0,242,255,0.35);
+    }
+
+    /* Ghost button */
+    .ghost {
+      border-radius: 999px;
+      padding: 10px 18px;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: transparent;
+      color: rgba(255,255,255,0.75);
+      font-size: 0.85rem;
+    }
+
+    .ghost:hover {
+      background: rgba(255,255,255,0.08);
+    }
+
+    /* Dashboard */
+    .dashboard {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
+      gap: 20px;
+    }
+
+    .form-card {
+      padding: 22px 24px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2,minmax(0,1fr));
+      gap: 14px 18px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .buttons-row {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .list-card {
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .count-pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.22);
       font-size: 0.8rem;
-      color: var(--text-muted);
+      color: rgba(255,255,255,0.7);
     }
 
-    .format-list li {
-      margin-bottom: 4px;
+    .note-list {
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.3);
+      overflow: hidden;
+      max-height: 430px;
+      overflow-y: auto;
     }
 
-    .format-list code {
-      font-family: monospace;
+    .note-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.9rem;
     }
 
-    @media (max-width: 1000px) {
-      #app {
-        grid-template-areas:
-          "header header"
-          "left right"
-          "content content";
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: auto auto auto;
-      }
+    .note-row:last-child {
+      border-bottom: none;
     }
 
-    @media (max-width: 768px) {
-      #app {
-        grid-template-areas:
-          "header"
-          "left"
-          "right"
-          "content";
+    .note-main {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .note-title-small {
+      font-weight: 600;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .note-meta {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.6);
+      margin-top: 2px;
+    }
+
+    .note-actions {
+      display: flex;
+      gap: 8px;
+      margin-left: 12px;
+    }
+
+    .note-actions button {
+      font-size: 0.78rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.23);
+      background: rgba(255,255,255,0.03);
+      color: rgba(255,255,255,0.78);
+    }
+
+    .note-actions button:hover {
+      background: rgba(255,255,255,0.12);
+    }
+
+    .note-actions .danger {
+      border-color: rgba(255,77,77,0.6);
+      color: #ffb3b3;
+    }
+
+    /* Messages */
+    .message {
+      margin-top: 10px;
+      min-height: 18px;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    .message.error {
+      color: var(--error);
+    }
+
+    .message.success {
+      color: var(--success);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .layout {
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto auto;
-        padding: 10px;
       }
-
-      .topbar {
-        padding: 0 14px;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
+      .dashboard {
+        grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 <body>
-  <div id="app">
-    <header class="topbar glass">
-      <div class="branding">TFBN Admin</div>
-      <div class="share-notes-pill">
-        Bulk manage notes for <span>The Final Boss Notes</span>
-      </div>
-    </header>
+  <header class="topbar glass">
+    <div class="branding">TFB Admin Panel</div>
+    <button id="logoutBtn" class="hidden">Logout</button>
+  </header>
 
-    <aside class="sidebar glass left-sidebar">
-      <h2>Admin Tools</h2>
+  <main class="layout">
+    <!-- LOGIN CARD -->
+    <section id="loginSection" class="glass auth-card">
+      <h2>Admin Login</h2>
+      <form id="loginForm">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="admin@email.com" required />
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" required minlength="6" />
+        <button type="submit">Login</button>
+      </form>
+      <div id="loginMessage" class="message"></div>
+    </section>
 
-      <section class="bulk-import glass-inner">
-        <h3>Bulk Import (JSON)</h3>
-        <p class="bulk-help">
-          Paste an <strong>array</strong> of notes. Example:
-          <code>[{"title":"CTPS PYQ","subject":"CTPS","semester":"1","faculty":"Baghal","tags":["Aashi"],"fileSize":"7","driveLink":"https://..."}]</code>
-        </p>
-        <textarea id="bulkJsonInput" rows="8"
-placeholder='[
-  {
-    "title": "CTPS PYQ",
-    "subject": "CTPS",
-    "semester": "1",
-    "faculty": "Baghal",
-    "tags": ["Aashi"],
-    "fileSize": "7",
-    "driveLink": "https://drive.google.com/..."
-  }
-]'></textarea>
-        <button id="bulkImportBtn">Import from JSON</button>
-        <div id="bulkImportStatus" class="bulk-status"></div>
+    <!-- DASHBOARD -->
+    <section id="adminSection" class="hidden dashboard">
+      <section class="glass form-card">
+        <h2>Add / Edit Note</h2>
+        <form id="noteForm" novalidate>
+          <div class="form-grid">
+            <div class="field">
+              <label>Title *</label>
+              <input type="text" id="noteTitle" required />
+            </div>
+            <div class="field">
+              <label>Subject *</label>
+              <input type="text" id="noteSubject" required />
+            </div>
+            <div class="field">
+              <label>Semester *</label>
+              <select id="noteSemester" required>
+                <option value="" disabled selected>Select semester</option>
+                <option value="1">Sem 1</option>
+                <option value="2">Sem 2</option>
+                <option value="3">Sem 3</option>
+                <option value="4">Sem 4</option>
+                <option value="5">Sem 5</option>
+                <option value="6">Sem 6</option>
+                <option value="7">Sem 7</option>
+                <option value="8">Sem 8</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Faculty *</label>
+              <input type="text" id="noteFaculty" required />
+            </div>
+            <div class="field">
+              <label>Tags (comma separated)</label>
+              <input type="text" id="noteTags" />
+            </div>
+            <div class="field">
+              <label>File size (MB) *</label>
+              <input type="text" id="noteFileSize" required />
+            </div>
+            <div class="field full">
+              <label>Google Drive link *</label>
+              <input type="url" id="noteDriveLink" required />
+            </div>
+          </div>
+
+          <div class="buttons-row">
+            <button type="submit" id="saveBtn">Save Note</button>
+            <button type="button" id="cancelEditBtn" class="ghost hidden">Cancel Edit</button>
+          </div>
+        </form>
+        <div id="formMessage" class="message"></div>
       </section>
 
-      <section class="bulk-import glass-inner">
-        <h3>Import from Sheet</h3>
-        <p class="bulk-help">
-          Enter a public Sheet‑to‑JSON URL. Expected fields:
-          <code>title, subject, semester, faculty, tags, fileSize, driveLink</code>
-        </p>
-        <input type="url" id="sheetUrlInput" placeholder="https://your-sheet-json-endpoint..." />
-        <button id="sheetImportBtn">Fetch &amp; Import</button>
-        <div id="sheetImportStatus" class="bulk-status"></div>
+      <section class="glass list-card">
+        <div class="list-header">
+          <h2>All Notes</h2>
+          <span id="notesCount" class="count-pill">0 notes</span>
+        </div>
+        <div id="notesList" class="note-list"></div>
       </section>
-    </aside>
-
-    <main class="content glass">
-      <p>Use the tools on the left to import notes in bulk.</p>
-    </main>
-
-    <aside class="sidebar glass right-sidebar">
-      <h2>Notes Format</h2>
-      <div class="format-card">
-        <p class="format-title">Required fields per note:</p>
-        <ul class="format-list">
-          <li><code>title</code> – string</li>
-          <li><code>subject</code> – string</li>
-          <li><code>semester</code> – "1"–"8"</li>
-          <li><code>faculty</code> – string</li>
-          <li><code>tags</code> – array or comma‑string</li>
-          <li><code>fileSize</code> – string (e.g. "7")</li>
-          <li><code>driveLink</code> – URL</li>
-        </ul>
-      </div>
-    </aside>
-  </div>
-
-  <footer class="site-footer">
-    <span>© <span id="footerYear"></span> EpicApp Innovations. Admin Panel.</span>
-  </footer>
+    </section>
+  </main>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="admin.js"></script>
+  <script>
+    // Firebase init
+    const firebaseConfig = {
+      apiKey: "AIzaSyBFWCCiw-9_8gsBaXoJ1RxMEL89lvyOIho",
+      authDomain: "the-final-boss-notes.firebaseapp.com",
+      projectId: "the-final-boss-notes",
+      storageBucket: "the-final-boss-notes.appspot.com",
+      messagingSenderId: "319601095052",
+      appId: "1:319601095052:web:691823298ab7c1826f66a9",
+      measurementId: "G-CVCSSCXMCB",
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    const auth = firebase.auth();
+    const db   = firebase.firestore();
+
+    // Elements
+    const logoutBtn      = document.getElementById('logoutBtn');
+    const loginSection   = document.getElementById('loginSection');
+    const adminSection   = document.getElementById('adminSection');
+    const loginForm      = document.getElementById('loginForm');
+    const loginMessage   = document.getElementById('loginMessage');
+
+    const noteForm       = document.getElementById('noteForm');
+    const formMessage    = document.getElementById('formMessage');
+    const cancelEditBtn  = document.getElementById('cancelEditBtn');
+    const notesListEl    = document.getElementById('notesList');
+    const notesCountEl   = document.getElementById('notesCount');
+
+    // form fields
+    const fTitle     = document.getElementById('noteTitle');
+    const fSubject   = document.getElementById('noteSubject');
+    const fSemester  = document.getElementById('noteSemester');
+    const fFaculty   = document.getElementById('noteFaculty');
+    const fTags      = document.getElementById('noteTags');
+    const fFileSize  = document.getElementById('noteFileSize');
+    const fDriveLink = document.getElementById('noteDriveLink');
+
+    let isEditing = false;
+    let editingId = null;
+
+    // ---------- UI helpers ----------
+    function showLogin() {
+      loginSection.classList.remove('hidden');
+      adminSection.classList.add('hidden');
+      logoutBtn.classList.add('hidden');
+    }
+
+    function showDashboard() {
+      loginSection.classList.add('hidden');
+      adminSection.classList.remove('hidden');
+      logoutBtn.classList.remove('hidden');
+    }
+
+    function clearMessages() {
+      loginMessage.textContent = '';
+      formMessage.textContent = '';
+      formMessage.className = 'message';
+    }
+
+    function resetForm() {
+      noteForm.reset();
+      isEditing = false;
+      editingId = null;
+      cancelEditBtn.classList.add('hidden');
+      formMessage.textContent = '';
+      formMessage.className = 'message';
+    }
+
+    // ---------- Auth state ----------
+    auth.onAuthStateChanged(user => {
+      clearMessages();
+      if (user) {
+        showDashboard();
+        loadNotes();
+      } else {
+        showLogin();
+        notesListEl.innerHTML = '';
+        notesCountEl.textContent = '0 notes';
+      }
+    });
+
+    // ---------- Login ----------
+    loginForm.addEventListener('submit', e => {
+      e.preventDefault();
+      clearMessages();
+      const email = loginForm.loginEmail.value.trim();
+      const pass  = loginForm.loginPassword.value;
+
+      if (!email || !pass) {
+        loginMessage.textContent = 'Enter email and password.';
+        loginMessage.className = 'message error';
+        return;
+      }
+
+      auth.signInWithEmailAndPassword(email, pass)
+        .then(() => {
+          loginForm.reset();
+        })
+        .catch(err => {
+          loginMessage.textContent = err.message;
+          loginMessage.className = 'message error';
+        });
+    });
+
+    // ---------- Logout ----------
+    logoutBtn.addEventListener('click', () => {
+      auth.signOut();
+    });
+
+    // ---------- Load notes ----------
+    async function loadNotes() {
+      notesListEl.innerHTML = '<div class="message">Loading notes...</div>';
+      try {
+        const snap = await db.collection('notes')
+          .orderBy('uploadDate', 'desc')
+          .get();
+
+        const docs = snap.docs;
+        notesCountEl.textContent = `${docs.length} notes`;
+
+        if (!docs.length) {
+          notesListEl.innerHTML = '<div class="message">No notes yet.</div>';
+          return;
+        }
+
+        notesListEl.innerHTML = '';
+        docs.forEach(doc => {
+          const data = doc.data();
+          const row  = document.createElement('div');
+          row.className = 'note-row';
+          row.innerHTML = `
+            <div class="note-main">
+              <div class="note-title-small" title="${data.title || ''}">
+                ${data.title || '(no title)'}
+              </div>
+              <div class="note-meta">
+                Sem ${data.semester || '-'} • ${data.subject || '-'} • ${data.faculty || '-'}
+              </div>
+            </div>
+            <div class="note-actions">
+              <button data-id="${doc.id}" class="editBtn">Edit</button>
+              <button data-id="${doc.id}" class="danger deleteBtn">Delete</button>
+            </div>
+          `;
+          notesListEl.appendChild(row);
+        });
+
+        notesListEl.querySelectorAll('.editBtn')
+          .forEach(btn => btn.addEventListener('click', onEditClick));
+        notesListEl.querySelectorAll('.deleteBtn')
+          .forEach(btn => btn.addEventListener('click', onDeleteClick));
+
+      } catch (err) {
+        notesListEl.innerHTML = `<div class="message error">Error loading notes: ${err.message}</div>`;
+      }
+    }
+
+    // ---------- Edit ----------
+    async function onEditClick(e) {
+      const id = e.target.dataset.id;
+      clearMessages();
+
+      try {
+        const doc = await db.collection('notes').doc(id).get();
+        if (!doc.exists) {
+          formMessage.textContent = 'Note not found.';
+          formMessage.className = 'message error';
+          return;
+        }
+        const d = doc.data();
+        fTitle.value     = d.title || '';
+        fSubject.value   = d.subject || '';
+        fSemester.value  = d.semester || '';
+        fFaculty.value   = d.faculty || '';
+        fTags.value      = (d.tags || []).join(', ');
+        fFileSize.value  = d.fileSize || '';
+        fDriveLink.value = d.driveLink || '';
+
+        isEditing = true;
+        editingId = id;
+        cancelEditBtn.classList.remove('hidden');
+        formMessage.textContent = 'Editing existing note.';
+        formMessage.className = 'message';
+      } catch (err) {
+        formMessage.textContent = 'Error opening note: ' + err.message;
+        formMessage.className = 'message error';
+      }
+    }
+
+    // ---------- Delete ----------
+    async function onDeleteClick(e) {
+      const id = e.target.dataset.id;
+      clearMessages();
+      if (!confirm('Delete this note permanently?')) return;
+
+      try {
+        await db.collection('notes').doc(id).delete();
+        formMessage.textContent = 'Note deleted.';
+        formMessage.className = 'message success';
+        if (isEditing && editingId === id) resetForm();
+        loadNotes();
+      } catch (err) {
+        formMessage.textContent = 'Error deleting note: ' + err.message;
+        formMessage.className = 'message error';
+      }
+    }
+
+    // ---------- Cancel edit ----------
+    cancelEditBtn.addEventListener('click', e => {
+      e.preventDefault();
+      resetForm();
+    });
+
+    // ---------- Save (add / update) ----------
+    noteForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      clearMessages();
+
+      const title    = fTitle.value.trim();
+      const subject  = fSubject.value.trim();
+      const semester = fSemester.value;
+      const faculty  = fFaculty.value.trim();
+      const tags     = fTags.value.split(',').map(t => t.trim()).filter(Boolean);
+      const fileSize = fFileSize.value.trim();
+      const drive    = fDriveLink.value.trim();
+
+      if (!title || !subject || !semester || !faculty || !fileSize || !drive) {
+        formMessage.textContent = 'Please fill all required fields.';
+        formMessage.className = 'message error';
+        return;
+      }
+      if (!drive.startsWith('http')) {
+        formMessage.textContent = 'Enter a valid Google Drive link.';
+        formMessage.className = 'message error';
+        return;
+      }
+
+      const payload = {
+        title,
+        subject,
+        semester,
+        faculty,
+        tags,
+        fileSize,
+        driveLink: drive,
+        uploadDate: firebase.firestore.FieldValue.serverTimestamp(),
+      };
+
+      try {
+        if (isEditing && editingId) {
+          await db.collection('notes').doc(editingId).update(payload);
+          formMessage.textContent = 'Note updated.';
+        } else {
+          await db.collection('notes').add(payload);
+          formMessage.textContent = 'Note added.';
+        }
+        formMessage.className = 'message success';
+        resetForm();
+        loadNotes();
+      } catch (err) {
+        formMessage.textContent = 'Error saving note: ' + err.message;
+        formMessage.className = 'message error';
+      }
+    });
+  </script>
 </body>
 </html>
