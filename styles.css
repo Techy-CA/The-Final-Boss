@@ -205,11 +205,17 @@ select option {
   border-radius: var(--radius-md);
   padding: 30px;
   display: grid;
-  grid-template-columns: repeat(2, 430px);  /* card width -> tweak yaha se */
-  justify-content: center;                  /* 2 columns center me */
+
+  /* yeh line BADAL do: */
+  /* grid-template-columns: repeat(2, 430px); */
+  /* into: */
+  grid-template-columns: repeat(2, minmax(360px, 1fr));
+
+  justify-content: center;
   gap: 25px;
   align-content: start;
 }
+
 
 /* Note Cards – wide + tall like screenshot 2 */
 .note-card {
