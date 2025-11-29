@@ -12,17 +12,12 @@ firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
 
-const footerYearEl = document.getElementById('footerYear');
-if (footerYearEl) {
-  footerYearEl.textContent = new Date().getFullYear().toString();
-}
-
-
 // UI Elements
 const notesList = document.getElementById('notesList');
 const searchInput = document.getElementById('searchInput');
 const semesterFilter = document.getElementById('semesterFilter');
 const sortSelect = document.getElementById('sortSelect');
+const footerYearEl = document.getElementById('footerYear');
 
 // stats elements
 const statTotalNotes = document.getElementById('statTotalNotes');
@@ -31,6 +26,11 @@ const statSemesters = document.getElementById('statSemesters');
 const statLastUpdated = document.getElementById('statLastUpdated');
 
 let notesCache = [];
+
+// footer year
+if (footerYearEl) {
+  footerYearEl.textContent = new Date().getFullYear().toString();
+}
 
 // Helper: clear children of element
 function clearChildren(el) {
@@ -75,10 +75,8 @@ function renderNotes(notes) {
 
 // Update quick stats
 function updateStats(notes) {
-  // total notes
   statTotalNotes.textContent = notes.length.toString();
 
-  // unique subjects
   const subjectSet = new Set();
   const semesterSet = new Set();
   let latest = null;
@@ -107,13 +105,11 @@ function updateStats(notes) {
 function updateDisplayedNotes() {
   let filtered = notesCache.slice();
 
-  // Filter by semester
   const semFilterVal = semesterFilter.value;
   if (semFilterVal) {
     filtered = filtered.filter(n => n.semester === semFilterVal);
   }
 
-  // Search filter on title, subject, faculty, tags
   const searchVal = sanitize(searchInput.value);
   if (searchVal) {
     filtered = filtered.filter(note => {
@@ -126,7 +122,6 @@ function updateDisplayedNotes() {
     });
   }
 
-  // Sorting
   const sortVal = sortSelect.value;
   filtered.sort((a,b) => {
     if (sortVal === 'uploadDateDesc') {
@@ -142,7 +137,7 @@ function updateDisplayedNotes() {
   });
 
   renderNotes(filtered);
-  updateStats(notesCache); // stats always from full dataset
+  updateStats(notesCache);
 }
 
 // Load notes from Firestore
@@ -171,10 +166,10 @@ async function loadNotes() {
   }
 }
 
-// Event listeners for filters and search
+// Event listeners
 searchInput.addEventListener('input', updateDisplayedNotes);
 semesterFilter.addEventListener('change', updateDisplayedNotes);
 sortSelect.addEventListener('change', updateDisplayedNotes);
 
-// Initial notes load
+// Initial load
 loadNotes();
