@@ -199,7 +199,7 @@ select option {
   color: rgba(255, 255, 255, 0.3);
 }
 
-/* Main Content – 2x2 view, page scroll */
+/* Main Content – desktop: 2 columns, page scroll */
 .content {
   grid-area: content;
   border-radius: var(--radius-md);
@@ -210,15 +210,15 @@ select option {
   align-content: start;
 }
 
-/* Note Cards – pehle wali size feel */
+/* Note Cards – big, spacious like screenshot */
 .note-card {
   background: var(--gradient-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
-  padding: 20px 26px;
+  padding: 24px 40px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   transition: var(--transition-smooth);
   position: relative;
   overflow: hidden;
