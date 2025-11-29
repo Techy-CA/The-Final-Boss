@@ -7,7 +7,271 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin-styles.css" />
+
+  <style>
+    :root {
+      --bg-dark: #0a0b1e;
+      --bg-panel: rgba(255, 255, 255, 0.05);
+      --primary: #00f2ff;
+      --primary-glow: rgba(0, 242, 255, 0.4);
+      --secondary: #7000ff;
+      --text-main: #ffffff;
+      --text-muted: #a0a0b0;
+      --border-light: rgba(255, 255, 255, 0.1);
+
+      --radius-sm: 8px;
+      --radius-md: 16px;
+
+      --transition-fast: 0.2s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image:
+        radial-gradient(circle at 10% 20%, rgba(112, 0, 255, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(0, 242, 255, 0.1) 0%, transparent 40%);
+      display: flex;
+      flex-direction: column;
+    }
+
+    #app {
+      display: grid;
+      grid-template-areas:
+        "header header header"
+        "left content right";
+      grid-template-columns: 320px 1fr 320px;
+      grid-template-rows: 70px auto;
+      gap: 20px;
+      padding: 20px;
+      max-width: 1600px;
+      margin: 0 auto;
+      flex: 1 0 auto;
+    }
+
+    .site-footer {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      width: 100%;
+    }
+
+    .glass {
+      background: var(--bg-panel);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-light);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    }
+
+    .glass-inner {
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+    }
+
+    .topbar {
+      grid-area: header;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+    }
+
+    .branding {
+      font-size: 1.4rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #ff6bcb, #00f2ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 1px;
+    }
+
+    .share-notes-pill {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.35);
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .share-notes-pill span {
+      color: var(--text-main);
+    }
+
+    .sidebar {
+      border-radius: var(--radius-md);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .left-sidebar {
+      grid-area: left;
+    }
+
+    .right-sidebar {
+      grid-area: right;
+    }
+
+    .content {
+      grid-area: content;
+      border-radius: var(--radius-md);
+      padding: 24px;
+    }
+
+    h2 {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--border-light);
+      padding-bottom: 6px;
+    }
+
+    h3 {
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+    }
+
+    .bulk-import {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .bulk-help {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .bulk-help code {
+      font-family: monospace;
+      background: rgba(0,0,0,0.35);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    #bulkJsonInput,
+    #sheetUrlInput {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-light);
+      color: var(--text-main);
+      padding: 10px 12px;
+      font-size: 0.85rem;
+      font-family: monospace;
+    }
+
+    #bulkJsonInput {
+      min-height: 170px;
+      resize: vertical;
+    }
+
+    #sheetUrlInput {
+      font-family: 'Outfit', sans-serif;
+    }
+
+    #bulkImportBtn,
+    #sheetImportBtn {
+      background: var(--primary);
+      color: #000;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      align-self: flex-start;
+      transition: var(--transition-fast);
+    }
+
+    #bulkImportBtn:hover,
+    #sheetImportBtn:hover {
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .bulk-status {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .format-card {
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      background: rgba(0,0,0,0.3);
+    }
+
+    .format-title {
+      font-size: 0.85rem;
+      margin-bottom: 6px;
+    }
+
+    .format-list {
+      list-style: none;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .format-list li {
+      margin-bottom: 4px;
+    }
+
+    .format-list code {
+      font-family: monospace;
+    }
+
+    @media (max-width: 1000px) {
+      #app {
+        grid-template-areas:
+          "header header"
+          "left right"
+          "content content";
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto auto;
+      }
+    }
+
+    @media (max-width: 768px) {
+      #app {
+        grid-template-areas:
+          "header"
+          "left"
+          "right"
+          "content";
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto;
+        padding: 10px;
+      }
+
+      .topbar {
+        padding: 0 14px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+    }
+  </style>
 </head>
 <body>
   <div id="app">
@@ -21,7 +285,6 @@
     <aside class="sidebar glass left-sidebar">
       <h2>Admin Tools</h2>
 
-      <!-- JSON paste import -->
       <section class="bulk-import glass-inner">
         <h3>Bulk Import (JSON)</h3>
         <p class="bulk-help">
@@ -29,7 +292,7 @@
           <code>[{"title":"CTPS PYQ","subject":"CTPS","semester":"1","faculty":"Baghal","tags":["Aashi"],"fileSize":"7","driveLink":"https://..."}]</code>
         </p>
         <textarea id="bulkJsonInput" rows="8"
-          placeholder='[
+placeholder='[
   {
     "title": "CTPS PYQ",
     "subject": "CTPS",
@@ -44,12 +307,11 @@
         <div id="bulkImportStatus" class="bulk-status"></div>
       </section>
 
-      <!-- Google Sheets import -->
       <section class="bulk-import glass-inner">
         <h3>Import from Sheet</h3>
         <p class="bulk-help">
-          Enter a public Sheet‑to‑JSON URL (App Script web app or tools like SheetBest).  
-          Expected fields: <code>title, subject, semester, faculty, tags, fileSize, driveLink</code>
+          Enter a public Sheet‑to‑JSON URL. Expected fields:
+          <code>title, subject, semester, faculty, tags, fileSize, driveLink</code>
         </p>
         <input type="url" id="sheetUrlInput" placeholder="https://your-sheet-json-endpoint..." />
         <button id="sheetImportBtn">Fetch &amp; Import</button>
@@ -82,9 +344,8 @@
     <span>© <span id="footerYear"></span> EpicApp Innovations. Admin Panel.</span>
   </footer>
 
-  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="admin-app.js"></script>
+  <script src="admin.js"></script>
 </body>
 </html>
