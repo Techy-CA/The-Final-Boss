@@ -65,7 +65,7 @@ body {
     "header header header"
     "left content right";
   grid-template-columns: 280px 1fr 320px;
-  grid-template-rows: 70px 1fr;
+  grid-template-rows: 70px auto;
   gap: 20px;
   padding: 20px;
   max-width: 1920px;
@@ -199,35 +199,29 @@ select option {
   color: rgba(255, 255, 255, 0.3);
 }
 
-/* Main Content – desktop: 2x2 visible grid, inner scroll if more */
+/* Main Content – 2x2 view, page scroll */
 .content {
   grid-area: content;
   border-radius: var(--radius-md);
   padding: 30px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 columns */
-  grid-auto-rows: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 cards per row */
   gap: 25px;
   align-content: start;
-
-  /* approx viewport height minus header (70), footer (40), vertical padding (2*20) */
-  max-height: calc(100vh - 70px - 40px - 40px);
-  overflow-y: auto;
 }
 
-/* Note Cards */
+/* Note Cards – pehle wali size feel */
 .note-card {
   background: var(--gradient-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
-  padding: 20px;
+  padding: 20px 26px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   transition: var(--transition-smooth);
   position: relative;
   overflow: hidden;
-  min-height: 190px; /* keep all cards visually similar */
 }
 
 .note-card::before {
@@ -442,15 +436,13 @@ select option {
       "left right"
       "content content";
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto auto auto;
     height: auto;
   }
   
   .content {
-    min-height: 500px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    max-height: none;
-    overflow-y: visible;
+    padding: 25px;
   }
 }
 
@@ -482,8 +474,6 @@ select option {
   .content {
     grid-template-columns: 1fr;
     padding: 20px 15px;
-    max-height: none;
-    overflow-y: visible;
   }
 
   .sidebar {
