@@ -1,8 +1,6 @@
-// admin.js — CLEAN VERSION
-
 // Firebase init
 const firebaseConfig = {
-  apiKey: "AIzaSyBFWCCiw-9_8gsBaXoJ1RxMEL89vylOh0",
+  apiKey: "AIzaSyBFWCCiw-9_8gsBaXoJ1RxMEL89lvyOIho",
   authDomain: "the-final-boss-notes.firebaseapp.com",
   projectId: "the-final-boss-notes",
   storageBucket: "the-final-boss-notes.appspot.com",
@@ -11,256 +9,142 @@ const firebaseConfig = {
   measurementId: "G-CVCSSCXMCB",
 };
 firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-const auth = firebase.auth();
-const db   = firebase.firestore();
+// footer year
+const fy = document.getElementById('footerYear');
+if (fy) fy.textContent = new Date().getFullYear().toString();
 
-// Elements
-const logoutBtn      = document.getElementById('logoutBtn');
-const loginSection   = document.getElementById('loginSection');
-const adminSection   = document.getElementById('adminSection');
-const loginForm      = document.getElementById('loginForm');
-const loginMessage   = document.getElementById('loginMessage');
-
-const noteForm       = document.getElementById('noteForm');
-const formMessage    = document.getElementById('formMessage');
-const cancelEditBtn  = document.getElementById('cancelEditBtn');
-const notesListEl    = document.getElementById('notesList');
-const notesCountEl   = document.getElementById('notesCount');
-
-// form fields
-const fTitle     = document.getElementById('noteTitle');
-const fSubject   = document.getElementById('noteSubject');
-const fSemester  = document.getElementById('noteSemester');
-const fFaculty   = document.getElementById('noteFaculty');
-const fTags      = document.getElementById('noteTags');
-const fFileSize  = document.getElementById('noteFileSize');
-const fDriveLink = document.getElementById('noteDriveLink');
-
-let isEditing = false;
-let editingId = null;
-
-// ---------- UI helpers ----------
-function showLogin() {
-  loginSection.classList.remove('hidden');
-  adminSection.classList.add('hidden');
-  logoutBtn.classList.add('hidden');
-}
-
-function showDashboard() {
-  loginSection.classList.add('hidden');
-  adminSection.classList.remove('hidden');
-  logoutBtn.classList.remove('hidden');
-}
-
-function clearMessages() {
-  loginMessage.textContent = '';
-  formMessage.textContent = '';
-  formMessage.className = 'message';
-}
-
-function resetForm() {
-  noteForm.reset();
-  isEditing = false;
-  editingId = null;
-  cancelEditBtn.classList.add('hidden');
-  formMessage.textContent = '';
-  formMessage.className = 'message';
-}
-
-// ---------- Auth state ----------
-auth.onAuthStateChanged(user => {
-  clearMessages();
-  if (user) {
-    showDashboard();
-    loadNotes();
-  } else {
-    showLogin();
-    notesListEl.innerHTML = '';
-    notesCountEl.textContent = '0 notes';
-  }
-});
-
-// ---------- Login ----------
-loginForm.addEventListener('submit', e => {
-  e.preventDefault();
-  clearMessages();
-  const email = loginForm.loginEmail.value.trim();
-  const pass  = loginForm.loginPassword.value;
-
-  if (!email || !pass) {
-    loginMessage.textContent = 'Enter email and password.';
-    loginMessage.className = 'message error';
-    return;
+/* -------- Helper: normalize note object -------- */
+function normalizeNote(raw) {
+  let tags = raw.tags || [];
+  if (typeof tags === 'string') {
+    tags = tags
+      .split(',')
+      .map(t => t.trim())
+      .filter(Boolean);
   }
 
-  auth.signInWithEmailAndPassword(email, pass)
-    .then(() => {
-      loginForm.reset();
-    })
-    .catch(err => {
-      loginMessage.textContent = err.message;
-      loginMessage.className = 'message error';
-    });
-});
-
-// ---------- Logout ----------
-logoutBtn.addEventListener('click', () => {
-  auth.signOut();
-});
-
-// ---------- Load notes ----------
-async function loadNotes() {
-  notesListEl.innerHTML = '<div class="message">Loading notes...</div>';
-  try {
-    const snap = await db.collection('notes')
-      .orderBy('uploadDate', 'desc')
-      .get();
-
-    const docs = snap.docs;
-    notesCountEl.textContent = `${docs.length} notes`;
-
-    if (!docs.length) {
-      notesListEl.innerHTML = '<div class="message">No notes yet.</div>';
-      return;
-    }
-
-    notesListEl.innerHTML = '';
-    docs.forEach(doc => {
-      const data = doc.data();
-      const row  = document.createElement('div');
-      row.className = 'note-row';
-      row.innerHTML = `
-        <div class="note-main">
-          <div class="note-title-small" title="${data.title || ''}">
-            ${data.title || '(no title)'}
-          </div>
-          <div class="note-meta">
-            Sem ${data.semester || '-'} • ${data.subject || '-'} • ${data.faculty || '-'}
-          </div>
-        </div>
-        <div class="note-actions">
-          <button data-id="${doc.id}" class="editBtn">Edit</button>
-          <button data-id="${doc.id}" class="danger deleteBtn">Delete</button>
-        </div>
-      `;
-      notesListEl.appendChild(row);
-    });
-
-    notesListEl.querySelectorAll('.editBtn')
-      .forEach(btn => btn.addEventListener('click', onEditClick));
-    notesListEl.querySelectorAll('.deleteBtn')
-      .forEach(btn => btn.addEventListener('click', onDeleteClick));
-
-  } catch (err) {
-    notesListEl.innerHTML = `<div class="message error">Error loading notes: ${err.message}</div>`;
-  }
-}
-
-// ---------- Edit ----------
-async function onEditClick(e) {
-  const id = e.target.dataset.id;
-  clearMessages();
-
-  try {
-    const doc = await db.collection('notes').doc(id).get();
-    if (!doc.exists) {
-      formMessage.textContent = 'Note not found.';
-      formMessage.className = 'message error';
-      return;
-    }
-    const d = doc.data();
-    fTitle.value     = d.title || '';
-    fSubject.value   = d.subject || '';
-    fSemester.value  = d.semester || '';
-    fFaculty.value   = d.faculty || '';
-    fTags.value      = (d.tags || []).join(', ');
-    fFileSize.value  = d.fileSize || '';
-    fDriveLink.value = d.driveLink || '';
-
-    isEditing = true;
-    editingId = id;
-    cancelEditBtn.classList.remove('hidden');
-    formMessage.textContent = 'Editing existing note.';
-    formMessage.className = 'message';
-  } catch (err) {
-    formMessage.textContent = 'Error opening note: ' + err.message;
-    formMessage.className = 'message error';
-  }
-}
-
-// ---------- Delete ----------
-async function onDeleteClick(e) {
-  const id = e.target.dataset.id;
-  clearMessages();
-  if (!confirm('Delete this note permanently?')) return;
-
-  try {
-    await db.collection('notes').doc(id).delete();
-    formMessage.textContent = 'Note deleted.';
-    formMessage.className = 'message success';
-    if (isEditing && editingId === id) resetForm();
-    loadNotes();
-  } catch (err) {
-    formMessage.textContent = 'Error deleting note: ' + err.message;
-    formMessage.className = 'message error';
-  }
-}
-
-// ---------- Cancel edit ----------
-cancelEditBtn.addEventListener('click', e => {
-  e.preventDefault();
-  resetForm();
-});
-
-// ---------- Save (add / update) ----------
-noteForm.addEventListener('submit', async e => {
-  e.preventDefault();
-  clearMessages();
-
-  const title    = fTitle.value.trim();
-  const subject  = fSubject.value.trim();
-  const semester = fSemester.value;
-  const faculty  = fFaculty.value.trim();
-  const tags     = fTags.value.split(',').map(t => t.trim()).filter(Boolean);
-  const fileSize = fFileSize.value.trim();
-  const drive    = fDriveLink.value.trim();
-
-  if (!title || !subject || !semester || !faculty || !fileSize || !drive) {
-    formMessage.textContent = 'Please fill all required fields.';
-    formMessage.className = 'message error';
-    return;
-  }
-  if (!drive.startsWith('http')) {
-    formMessage.textContent = 'Enter a valid Google Drive link.';
-    formMessage.className = 'message error';
-    return;
-  }
-
-  const payload = {
-    title,
-    subject,
-    semester,
-    faculty,
+  return {
+    title: raw.title || '',
+    subject: raw.subject || '',
+    semester: String(raw.semester || ''),
+    faculty: raw.faculty || '',
     tags,
-    fileSize,
-    driveLink: drive,
-    uploadDate: firebase.firestore.FieldValue.serverTimestamp(),
+    fileSize: String(raw.fileSize || ''),
+    driveLink: raw.driveLink || '',
+    uploadDate: firebase.firestore.FieldValue.serverTimestamp()
   };
+}
+
+/* -------- Shared import function (array -> Firestore) -------- */
+async function importNotesArray(items, setStatus) {
+  if (!Array.isArray(items) || items.length === 0) {
+    setStatus('No items found to import.', '#ffcc00');
+    return;
+  }
+
+  const batchSize = 400;
 
   try {
-    if (isEditing && editingId) {
-      await db.collection('notes').doc(editingId).update(payload);
-      formMessage.textContent = 'Note updated.';
-    } else {
-      await db.collection('notes').add(payload);
-      formMessage.textContent = 'Note added.';
+    let imported = 0;
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = db.batch();
+      const slice = items.slice(i, i + batchSize);
+
+      slice.forEach(raw => {
+        const docRef = db.collection('notes').doc();
+        batch.set(docRef, normalizeNote(raw));
+      });
+
+      await batch.commit();
+      imported += slice.length;
+      setStatus('Imported ' + imported + ' / ' + items.length + ' notes...', '#aaaaaa');
     }
-    formMessage.className = 'message success';
-    resetForm();
-    loadNotes();
+
+    setStatus('Import completed for ' + items.length + ' notes.', '#00ff9d');
   } catch (err) {
-    formMessage.textContent = 'Error saving note: ' + err.message;
-    formMessage.className = 'message error';
+    console.error(err);
+    setStatus('Error during import: ' + err.message, '#ff6b6b');
   }
-});
+}
+
+/* -------- 1) Bulk import from JSON textarea -------- */
+
+const bulkJsonInput = document.getElementById('bulkJsonInput');
+const bulkImportBtn = document.getElementById('bulkImportBtn');
+const bulkImportStatus = document.getElementById('bulkImportStatus');
+
+if (bulkImportBtn && bulkJsonInput && bulkImportStatus) {
+  bulkImportBtn.addEventListener('click', () => {
+    const text = bulkJsonInput.value.trim();
+    if (!text) {
+      bulkImportStatus.textContent = 'Paste JSON data first.';
+      bulkImportStatus.style.color = '#ffcc00';
+      return;
+    }
+
+    let items;
+    try {
+      items = JSON.parse(text);
+      if (!Array.isArray(items)) {
+        throw new Error('JSON must be an array of note objects');
+      }
+    } catch (err) {
+      bulkImportStatus.textContent = 'Invalid JSON: ' + err.message;
+      bulkImportStatus.style.color = '#ff6b6b';
+      return;
+    }
+
+    bulkImportStatus.textContent = 'Starting import...';
+    bulkImportStatus.style.color = '#aaaaaa';
+
+    importNotesArray(items, (msg, color) => {
+      bulkImportStatus.textContent = msg;
+      bulkImportStatus.style.color = color;
+    }).then(() => {
+      bulkJsonInput.value = '';
+    });
+  });
+}
+
+/* -------- 2) Import from Google Sheet JSON URL -------- */
+
+const sheetUrlInput = document.getElementById('sheetUrlInput');
+const sheetImportBtn = document.getElementById('sheetImportBtn');
+const sheetImportStatus = document.getElementById('sheetImportStatus');
+
+if (sheetImportBtn && sheetUrlInput && sheetImportStatus) {
+  sheetImportBtn.addEventListener('click', async () => {
+    const url = sheetUrlInput.value.trim();
+    if (!url) {
+      sheetImportStatus.textContent = 'Enter a Sheet JSON URL first.';
+      sheetImportStatus.style.color = '#ffcc00';
+      return;
+    }
+
+    sheetImportStatus.textContent = 'Fetching data from sheet...';
+    sheetImportStatus.style.color = '#aaaaaa';
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+
+      const items = Array.isArray(data)
+        ? data
+        : Array.isArray(data.rows)
+        ? data.rows
+        : [];
+
+      await importNotesArray(items, (msg, color) => {
+        sheetImportStatus.textContent = msg;
+        sheetImportStatus.style.color = color;
+      });
+    } catch (err) {
+      console.error(err);
+      sheetImportStatus.textContent = 'Error fetching sheet: ' + err.message;
+      sheetImportStatus.style.color = '#ff6b6b';
+    }
+  });
+}
