@@ -199,29 +199,31 @@ select option {
   color: rgba(255, 255, 255, 0.3);
 }
 
-/* Main Content – desktop: 2 columns, page scroll */
+/* Main Content – desktop: 2 fixed-width cards per row */
 .content {
   grid-area: content;
   border-radius: var(--radius-md);
   padding: 30px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 cards per row */
+  grid-template-columns: repeat(2, 430px);  /* card width -> tweak yaha se */
+  justify-content: center;                  /* 2 columns center me */
   gap: 25px;
   align-content: start;
 }
 
-/* Note Cards – big, spacious like screenshot */
+/* Note Cards – wide + tall like screenshot 2 */
 .note-card {
   background: var(--gradient-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
-  padding: 24px 40px;
+  padding: 24px 36px;
   display: flex;
   flex-direction: column;
   gap: 14px;
   transition: var(--transition-smooth);
   position: relative;
   overflow: hidden;
+  min-height: 220px;
 }
 
 .note-card::before {
@@ -435,13 +437,14 @@ select option {
       "header header"
       "left right"
       "content content";
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto;
-    height: auto;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  height: auto;
   }
   
   .content {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
     padding: 25px;
   }
 }
@@ -473,6 +476,7 @@ select option {
 
   .content {
     grid-template-columns: 1fr;
+    justify-content: stretch;
     padding: 20px 15px;
   }
 
